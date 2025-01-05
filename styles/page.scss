@@ -1,0 +1,9 @@
+.move-title {
+  font-size: 2rem;
+  color: "#385816";
+  font-weight: 900;
+
+  @media (min-width: "768px") {
+    font-size: 3.6rem;
+  }
+}
