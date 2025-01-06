@@ -55,6 +55,31 @@ export default function Settings() {
           }))}
           value={context.genres}
           onChange={context.setGenres}
+          searchable
+        />
+        <Select
+          mt={"sm"}
+          label="Regions"
+          placeholder="Select regions"
+          data={context.availableRegions.map((region) => ({
+            value: region.iso_3166_1,
+            label: region.native_name,
+          }))}
+          value={context.region}
+          onChange={context.setRegion}
+          searchable
+        />
+        <MultiSelect
+          mt={"sm"}
+          label="Providers"
+          placeholder="Select provider"
+          data={context.availableProviders.map((provider) => ({
+            value: provider.provider_id.toString(),
+            label: provider.provider_name,
+          }))}
+          value={context.providers}
+          onChange={context.setProviders}
+          searchable
         />
         <MultiSelect
           mt={"sm"}
@@ -63,6 +88,7 @@ export default function Settings() {
           data={countryCode}
           value={context.countries}
           onChange={context.setCountries}
+          searchable
         />
         <Select
           mt={"sm"}

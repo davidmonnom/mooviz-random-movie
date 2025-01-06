@@ -2,7 +2,7 @@
 
 import { createContext, useEffect, useState } from "react";
 import crypto from "crypto";
-import { Genre, Movie } from "./types";
+import { Genre, Movie, Provider, Region } from "./types";
 
 type MovieCache = Record<
   string,
@@ -12,17 +12,23 @@ type MovieCache = Record<
 type MoovizContextType = {
   movies: MovieCache;
   genres: string[];
+  region: string | null;
+  providers: string[];
   years: [number, number];
   countries: string[];
   language: string;
   current: Movie | null;
   voteAverage: number;
   loading: boolean;
+  availableRegions: Region[];
+  availableProviders: Provider[];
   availableGenres: Genre[];
   getMoviesByHash: () => Movie[];
   setVoteAverage: (vote: number) => void;
   setCountries: (countries: string[]) => void;
   setGenres: (genre: string[]) => void;
+  setRegion: (region: string | null) => void;
+  setProviders: (providers: string[]) => void;
   setYears: (years: [number, number]) => void;
   changeLanguage: (lang: string | null) => void;
   getMovie: () => void;
@@ -35,12 +41,16 @@ interface MoovizContextWrapper {
 }
 
 export const MoovizContextWrapper = ({ children }: MoovizContextWrapper) => {
-  const [countries, setCountries] = useState<string[]>(["US", "FR"]);
+  const [countries, setCountries] = useState<string[]>(["US"]);
   const [loading, setLoading] = useState<boolean>(false);
   const [movies, setMovies] = useState<MovieCache>({});
   const [current, setCurrent] = useState<Movie | null>(null);
+  const [region, setRegion] = useState<string | null>("BE");
+  const [availableRegions, setAvailableRegions] = useState<Region[]>([]);
   const [availableGenres, setAvailableGenres] = useState<Genre[]>([]);
+  const [availableProviders, setAvailableProviders] = useState<Provider[]>([]);
   const [genres, setGenres] = useState<string[]>([]);
+  const [providers, setProviders] = useState<string[]>([]);
   const [years, setYears] = useState<[number, number]>([
     2019,
     new Date().getFullYear(),
@@ -55,10 +65,14 @@ export const MoovizContextWrapper = ({ children }: MoovizContextWrapper) => {
 
   const constructUrl = () => {
     const language = localStorage.getItem("language") || "en-US";
-    let url = `/api/discover?include_adult=false&include_video=false&sort_by=popularity.desc&language=${language}`;
+    let url = `/api/discover?include_adult=false&vote_count.gte=100&with_watch_monetization_types=buy|rent&include_video=false&sort_by=popularity.desc&language=${language}`;
 
     if (genres.length > 0) {
       url += `&with_genres=${genres.sort().join("|")}`;
+    }
+
+    if (providers.length > 0) {
+      url += `&with_watch_providers=${providers.sort().join("|")}`;
     }
 
     if (countries.length > 0) {
@@ -76,10 +90,27 @@ export const MoovizContextWrapper = ({ children }: MoovizContextWrapper) => {
     return url;
   };
 
+  const getRegions = async () => {
+    const response = await fetch(`/api/region?language=${language}`);
+    const result = await response.json();
+    setAvailableRegions(result.data.results);
+  };
+
   const getGenres = async () => {
     const response = await fetch(`/api/genre?language=${language}`);
     const result = await response.json();
     setAvailableGenres(result.data.genres);
+  };
+
+  const getProviders = async () => {
+    const response = await fetch(
+      `/api/provider?language=${language}&watch_region=${region || "US"}`
+    );
+    const result = await response.json();
+    const ordered = result.data.results.sort((a: Provider, b: Provider) =>
+      a.display_priority > b.display_priority ? 1 : -1
+    );
+    setAvailableProviders(ordered);
   };
 
   const discover = async (occurence = 0, pageCount = 0) => {
@@ -147,16 +178,22 @@ export const MoovizContextWrapper = ({ children }: MoovizContextWrapper) => {
   const data = {
     movies,
     genres,
+    providers,
     years,
+    region,
     language,
     loading,
     current,
     availableGenres,
+    availableProviders,
+    availableRegions,
     voteAverage,
     countries,
     setCountries,
     getMoviesByHash,
+    setRegion,
     setGenres,
+    setProviders,
     setVoteAverage,
     setYears,
     changeLanguage,
@@ -166,12 +203,16 @@ export const MoovizContextWrapper = ({ children }: MoovizContextWrapper) => {
   useEffect(() => {
     const initGenres = async () => {
       setLanguage(localStorage.getItem("language") || "en-US");
-      await getGenres();
-      await getMovie();
+      const promises = [getProviders(), getGenres(), getRegions(), getMovie()];
+      await Promise.all(promises);
     };
 
     initGenres();
   }, []);
+
+  useEffect(() => {
+    getProviders();
+  }, [region]);
 
   return (
     <MoovizContext.Provider value={{ ...data }}>

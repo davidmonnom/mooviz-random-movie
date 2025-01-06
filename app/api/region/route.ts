@@ -2,9 +2,8 @@ export async function GET(request: Request) {
   try {
     const params = new URL(request.url).searchParams;
     const language = params.get("language") || "en-US";
-    const movieId = params.get("movieId");
     const res = await fetch(
-      `https://api.themoviedb.org/3/movie/${movieId}/reviews?language=${language}`,
+      `https://api.themoviedb.org/3/watch/providers/regions?language=${language}`,
       {
         headers: {
           Authorization: `Bearer ${process.env.TMDB_API_KEY}`,
