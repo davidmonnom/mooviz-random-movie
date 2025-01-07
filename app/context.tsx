@@ -80,7 +80,7 @@ export const MoovizContextWrapper = ({ children }: MoovizContextWrapper) => {
     }
 
     if (years.length === 2) {
-      url += `&release_date.gte=${years[0]}-01-01&release_date.lte=${years[1]}-12-31`;
+      url += `&primary_release_date.gte=${years[0]}-01-01&primary_release_date.lte=${years[1]}-12-31`;
     }
 
     if (voteAverage > 0) {
