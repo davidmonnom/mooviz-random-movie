@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   try {
     let url = "https://api.themoviedb.org/3/discover/movie?";
