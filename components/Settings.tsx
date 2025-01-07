@@ -63,7 +63,7 @@ export default function Settings() {
           placeholder="Select regions"
           data={context.availableRegions.map((region) => ({
             value: region.iso_3166_1,
-            label: region.native_name,
+            label: region.english_name,
           }))}
           value={context.region}
           onChange={context.setRegion}
